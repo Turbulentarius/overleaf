@@ -9,10 +9,27 @@ services:
         depends_on:
             mongo:
                 condition: service_healthy
-            redis:
+            overleaf-redis:
                 condition: service_started
-        ports:
-            - 80:80
+        expose:
+            - "2400"
+        networks:
+            - exo_network_internal
+            - exo_network_external
+        labels:
+          traefik.enable: true
+          traefik.http.routers.overleaf.entryPoints: 'web'
+          traefik.http.routers.overleaf.rule: 'Host(`overleaf.beamtic.com`)'
+          traefik.http.middlewares.overleaf-redirect.redirectscheme.scheme: 'https'
+          traefik.http.middlewares.overleaf-redirect.redirectscheme.permanent: true
+          traefik.http.routers.overleaf.middlewares: 'overleaf-redirect, exoheaders'
+          traefik.http.routers.overleaf-secure.entryPoints: 'websecure'
+          traefik.http.routers.overleaf-secure.rule: 'Host(`overleaf.beamtic.com`)'
+          traefik.http.routers.overleaf-secure.tls: true
+          traefik.http.routers.overleaf-secure.tls.certresolver: 'letsencrypt'
+          traefik.http.middlewares.exoheaders.headers.stsSeconds: 15552000
+          traefik.http.middlewares.exoheaders.headers.forceSTSHeader: true
+          traefik.http.services.overleaf.loadbalancer.server.port: 80
         stop_grace_period: 60s
         volumes:
             - ~/sharelatex_data:/var/lib/overleaf
@@ -29,8 +46,8 @@ services:
 
             # Same property, unfortunately with different names in
             # different locations
-            OVERLEAF_REDIS_HOST: redis
-            REDIS_HOST: redis
+            OVERLEAF_REDIS_HOST: overleaf-redis
+            REDIS_HOST: overleaf-redis
 
             ENABLED_LINKED_FILE_TYPES: 'project_file,project_output_file'
 
@@ -115,13 +132,24 @@ services:
             interval: 10s
             timeout: 10s
             retries: 5
+        networks:
+          - exo_network_internal
 
-    redis:
+    overleaf-redis:
         restart: always
         image: redis:6.2
-        container_name: redis
+        container_name: overleaf-redis
         volumes:
             - ~/redis_data:/data
+        networks:
+            - exo_network_internal
+
+networks:
+  exo_network_internal:
+    name: exo_network_internal
+    internal: true
+  exo_network_external:
+    name: exo_network_external
 
     # ldap:
     #    restart: always
