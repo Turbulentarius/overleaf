@@ -33,6 +33,8 @@ Sign up to the [mailing list](https://mailchi.mp/overleaf.com/community-edition-
 
 ## Installation
 
+To start the server, just run `docker compose up`, then go to `/launchpad` and setup your admin user. (Source: https://github.com/overleaf/toolkit/blob/master/doc/quick-start-guide.md)
+
 We have detailed installation instructions in the [Overleaf Toolkit](https://github.com/overleaf/toolkit/).
 
 ## Upgrading
